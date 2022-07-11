@@ -224,6 +224,13 @@ class BrowserView(QMainWindow):
     def __init__(self, window):
         super(BrowserView, self).__init__()
         BrowserView.instances[window.uid] = self
+        
+        if _debug['mode'] and is_webengine:
+            # Initialise Remote debugging (need to be done only once)
+            if not BrowserView.inspector_port:
+                BrowserView.inspector_port = BrowserView._get_debug_port()
+                os.environ['QTWEBENGINE_REMOTE_DEBUGGING'] = BrowserView.inspector_port
+        
         self.uid = window.uid
         self.pywebview_window = window
 
@@ -289,13 +296,7 @@ class BrowserView(QMainWindow):
             os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = (
                 '--use-fake-ui-for-media-stream --enable-features=AutoplayIgnoreWebAudio')
 
-        if _debug['mode'] and is_webengine:
-            # Initialise Remote debugging (need to be done only once)
-            if not BrowserView.inspector_port:
-                BrowserView.inspector_port = BrowserView._get_debug_port()
-                os.environ['QTWEBENGINE_REMOTE_DEBUGGING'] = BrowserView.inspector_port
-        else:
-            self.view.setContextMenuPolicy(QtCore.Qt.NoContextMenu)  # disable right click context menu
+        self.view.setContextMenuPolicy(QtCore.Qt.NoContextMenu)  # disable right click context menu
 
         self.view.setPage(BrowserView.WebPage(self.view))
         self.view.page().loadFinished.connect(self.on_load_finished)
