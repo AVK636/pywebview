@@ -83,6 +83,7 @@ class BrowserView(QMainWindow):
     current_url_trigger = QtCore.Signal()
     evaluate_js_trigger = QtCore.Signal(str, str)
     on_top_trigger = QtCore.Signal(bool)
+    
 
     class JSBridge(QtCore.QObject):
         qtype = QtCore.QJsonValue if is_webengine else str
@@ -222,14 +223,14 @@ class BrowserView(QMainWindow):
             return self.nav_handler
 
     def __init__(self, window):
-        super(BrowserView, self).__init__()
-        BrowserView.instances[window.uid] = self
-        
         if _debug['mode'] and is_webengine:
             # Initialise Remote debugging (need to be done only once)
             if not BrowserView.inspector_port:
                 BrowserView.inspector_port = BrowserView._get_debug_port()
                 os.environ['QTWEBENGINE_REMOTE_DEBUGGING'] = BrowserView.inspector_port
+        
+        super(BrowserView, self).__init__()
+        BrowserView.instances[window.uid] = self
         
         self.uid = window.uid
         self.pywebview_window = window
