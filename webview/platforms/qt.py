@@ -35,6 +35,7 @@ logger.debug('Using Qt %s' % QtCore.__version__)
 
 from qtpy.QtWidgets import QMainWindow, QApplication, QFileDialog, QMessageBox, QAction, QMenuBar
 from qtpy.QtGui import QColor, QScreen
+from qtpy import PYQT5, PYQT6, PYSIDE2, PYSIDE6
 
 try:
     from qtpy.QtWebEngineWidgets import QWebEngineView as QWebView, QWebEnginePage as QWebPage, QWebEngineProfile
@@ -111,7 +112,10 @@ class BrowserView(QMainWindow):
                 self.setStyleSheet("background: transparent;")
 
         def contextMenuEvent(self, event):
-            menu = self.page().createStandardContextMenu()
+            if PYSIDE2 or PYSIDE6:
+                menu = self.createStandardContextMenu()
+            else:
+                menu = self.page().createStandardContextMenu()
 
             # If 'Inspect Element' is present in the default context menu, it
             # means the inspector is already up and running.
@@ -334,8 +338,12 @@ class BrowserView(QMainWindow):
         if window.initial_x is not None and window.initial_y is not None:
             self.move(window.initial_x, window.initial_y)
         else:
-            center = QApplication.desktop().availableGeometry().center() - self.rect().center()
-            self.move(center.x(), center.y())
+            if PYSIDE2 or PYSIDE6:
+                center = QScreen.availableGeometry(QApplication.primaryScreen()).center() - self.rect().center()
+                self.move(center.x(), center.y() - 16)
+            else:
+                center = QApplication.desktop().availableGeometry().center() - self.rect().center()
+                self.move(center.x(), center.y())
 
         if not window.minimized:
             self.activateWindow()
