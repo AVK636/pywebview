@@ -222,13 +222,7 @@ class BrowserView(QMainWindow):
         def createWindow(self, type):
             return self.nav_handler
 
-    def __init__(self, window):
-        if _debug['mode'] and is_webengine:
-            # Initialise Remote debugging (need to be done only once)
-            if not BrowserView.inspector_port:
-                BrowserView.inspector_port = BrowserView._get_debug_port()
-                os.environ['QTWEBENGINE_REMOTE_DEBUGGING'] = BrowserView.inspector_port
-        
+    def __init__(self, window):       
         super(BrowserView, self).__init__()
         BrowserView.instances[window.uid] = self
         
@@ -297,6 +291,7 @@ class BrowserView(QMainWindow):
             os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = (
                 '--use-fake-ui-for-media-stream --enable-features=AutoplayIgnoreWebAudio')
 
+        # Also disabled for debug
         self.view.setContextMenuPolicy(QtCore.Qt.NoContextMenu)  # disable right click context menu
 
         self.view.setPage(BrowserView.WebPage(self.view))
@@ -495,13 +490,11 @@ class BrowserView(QMainWindow):
             js_result['result'] = None if result is None or result == 'null' else result if result == '' else json.loads(result)
             js_result['semaphore'].release()
 
-        try:    # < Qt5.6
-            self.view.page().runJavaScript(script, return_result)
-        except TypeError:
-            self.view.page().runJavaScript(script)  # PySide2 & PySide6
-        except AttributeError:
-            result = self.view.page().mainFrame().evaluateJavaScript(script)
-            return_result(result)
+        try:
+            if PYSIDE2 or PYSIDE6:
+                self.view.page().runJavaScript(script, 0, return_result)
+            else:
+                self.view.page().runJavaScript(script, return_result)
         except Exception as e:
             logger.exception(e)
 
@@ -694,6 +687,11 @@ def create_window(window):
         global _app
 
         if is_webengine:
+            if _debug['mode'] and is_webengine:
+                # Initialise Remote debugging (need to be done only once)
+                if not BrowserView.inspector_port:
+                    BrowserView.inspector_port = BrowserView._get_debug_port()
+                    os.environ['QTWEBENGINE_REMOTE_DEBUGGING'] = BrowserView.inspector_port
             if _private_mode:
                 BrowserView.profile = QWebEngineProfile()
             else:
