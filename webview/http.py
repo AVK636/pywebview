@@ -46,7 +46,7 @@ def js_api():
     else:
         logger.error('JS callback function is not set')
 
-print(f'/js_api/{uid}')
+# print(f'/js_api/{uid}')
 
 
 @bottle.route('/')
