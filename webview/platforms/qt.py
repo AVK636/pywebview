@@ -111,6 +111,9 @@ class BrowserView(QMainWindow):
                 self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
                 self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent, False)
                 self.setStyleSheet("background: transparent;")
+                
+            # Make sure page is reloaded on every startup
+            self.reload()
 
         def contextMenuEvent(self, event):
             if PYSIDE2 or PYSIDE6:
